@@ -2,7 +2,7 @@ package controllers
 
 import javax.inject._
 
-import Model.Trip
+import models.Trip
 import play.api.mvc._
 import services.TripRankingService
 
@@ -11,8 +11,7 @@ import services.TripRankingService
   * application's home page.
   */
 @Singleton
-class TripRankingController @Inject()(cc: ControllerComponents,
-                                      service : TripRankingService) extends AbstractController(cc) {
+class TripRankingController @Inject()(service : TripRankingService) extends Controller {
 
   def index = Action {
     val rankedTrips = service.rankTrips(null)

@@ -33,7 +33,7 @@ There are several demonstration files available in this template.
 
 ## Components
 
-- Module.scala:
+- modules.Module.scala:
 
   Shows how to use Guice to bind all the components needed by your application.
 

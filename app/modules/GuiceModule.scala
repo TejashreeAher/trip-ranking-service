@@ -1,7 +1,7 @@
 package modules
 
 import com.google.inject.AbstractModule
-import services.TripRankingService
+import machine.RankingModel
 
 /**
   * Define the standard bindings
@@ -9,7 +9,8 @@ import services.TripRankingService
 class GuiceModule extends AbstractModule {
 
   override def configure(): Unit = {
-    bind(classOf[TripRankingService]).asEagerSingleton()
+//    bind(classOf[TripRankingService]).asEagerSingleton()
+    bind(classOf[RankingModel]).asEagerSingleton()
   }
 
 }

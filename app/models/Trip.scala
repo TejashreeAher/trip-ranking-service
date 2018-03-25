@@ -1,4 +1,4 @@
-package Model
+package models
 
 import play.api.libs.json.{JsResult, JsSuccess, JsValue, Reads}
 
