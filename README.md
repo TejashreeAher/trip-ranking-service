@@ -40,4 +40,5 @@ sbt run
     and the model is called for each of these batches individually. The end result, right now is just the 
     concatenation of the result of all the groups.
 
-
+## Next Steps : Actually remember teh previous results and use them to somehow predict the sequence (at least for some). This cache can be inmemory or in a remote cache like redis. 
+To avoid using redis, one can write the cache to hdfs or any file and then whenever the service restarts, load the file into an in-memory cache and can proceed.
