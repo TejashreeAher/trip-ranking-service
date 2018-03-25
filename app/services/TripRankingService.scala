@@ -32,6 +32,11 @@ class TripRankingService @Inject()(model : RankingModel) {
       rankedGrps.flatMap{case(key, value) => value}.toSeq
   }
 
+  //second implementation of merge
+//  def mergeRankedgroups2(rankedGrps : Map[Int, Seq[Int]]): Seq[Int] ={
+//    rankedGrps.zipWithIndex
+//  }
+
   def getGroupsOfTrips(trips : Seq[Trip], batchSize: Int) : Map[Int, Seq[Trip]]={
     val tripArr = trips
     var groupIndex = 0
