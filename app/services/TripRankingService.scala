@@ -18,7 +18,8 @@ class TripRankingService @Inject()(model : RankingModel) {
     }}
 
     //currently this just joins the result of all the individual groups
-    mergeRankedgroups(rankedInGroups)
+    val rankedTrips = mergeRankedgroups(rankedInGroups)
+    rankedTrips.map(_.tripId)
   }
 
   def min(i: Int, j: Int) = {
@@ -28,14 +29,36 @@ class TripRankingService @Inject()(model : RankingModel) {
     }
   }
 
-  def mergeRankedgroups(rankedGrps : Map[Int, Seq[Int]]): Seq[Int] ={
+  def mergeRankedgroups2(rankedGrps : Map[Int, Seq[Int]]): Seq[Int] ={
       rankedGrps.flatMap{case(key, value) => value}.toSeq
   }
 
+
+
   //second implementation of merge
-//  def mergeRankedgroups2(rankedGrps : Map[Int, Seq[Int]]): Seq[Int] ={
-//    rankedGrps.zipWithIndex
-//  }
+  def mergeRankedgroups(rankedGrps : Map[Int, Seq[Trip]]): Seq[Trip] ={
+    var finalMergedTrip: Seq[Trip] = Seq.empty
+    val numGroups = rankedGrps.size
+    var groupCurrIndex = List.fill(numGroups)(0)
+    println(s"inititalise group current index to : ${groupCurrIndex}")
+    while(groupCurrIndex != rankedGrps.map(_._2.size).toList){
+        val tempSeq = rankedGrps.map{case(index, value) => {
+          if(groupCurrIndex(index) < value.size) Some(value(groupCurrIndex(index)))
+          else None
+          }
+        }.toSeq.flatten
+        println(s"Sequence to be merged : ${tempSeq}")
+        val mergedRankedTrips = model.rankTrips(tempSeq)
+        println(s"Sequence to be merged is sorted to : ${mergedRankedTrips}")
+        val firstTripIndex = rankedGrps.filter(_._2.contains(mergedRankedTrips(0))).head._1//this tells us which batch, teh first element belongs to
+        println(s"First trip belongs to group : ${firstTripIndex}")
+        finalMergedTrip = finalMergedTrip :+ mergedRankedTrips(0)
+        println(s"final sorted list has now : ${mergedRankedTrips(0)}")
+        groupCurrIndex = groupCurrIndex.updated(firstTripIndex, groupCurrIndex(firstTripIndex)+1)
+        println(s"groupCurrIndex now is ${groupCurrIndex}")
+    }
+    finalMergedTrip
+  }
 
   def getGroupsOfTrips(trips : Seq[Trip], batchSize: Int) : Map[Int, Seq[Trip]]={
     val tripArr = trips
