@@ -53,22 +53,22 @@ class TripRankingService @Inject()(model : RankingModel) {
     var finalMergedTrip: Seq[Trip] = Seq.empty
     val numGroups = rankedGrps.size
     var groupCurrIndex = List.fill(numGroups)(0)
-    println(s"inititalise group current index to : ${groupCurrIndex}")
+//    println(s"inititalise group current index to : ${groupCurrIndex}")
     while(groupCurrIndex != rankedGrps.map(_._2.size).toList){
         val tempSeq = rankedGrps.map{case(index, value) => {
           if(groupCurrIndex(index) < value.size) Some(value(groupCurrIndex(index)))
           else None
           }
         }.toSeq.flatten
-        println(s"Sequence to be merged : ${tempSeq}")
+//        println(s"Sequence to be merged : ${tempSeq}")
         val mergedRankedTrips = model.rankTrips(tempSeq)
-        println(s"Sequence to be merged is sorted to : ${mergedRankedTrips}")
+//        println(s"Sequence to be merged is sorted to : ${mergedRankedTrips}")
         val firstTripIndex = rankedGrps.filter(isIndexOfFirstTrip(_, mergedRankedTrips(0), groupCurrIndex)).head._1//this tells us which batch, the first element belongs to
-        println(s"First trip belongs to group : ${firstTripIndex}")
+//        println(s"First trip belongs to group : ${firstTripIndex}")
         finalMergedTrip = finalMergedTrip :+ mergedRankedTrips(0)
-        println(s"final sorted list has now : ${mergedRankedTrips(0)}")
+//        println(s"final sorted list has now : ${mergedRankedTrips(0)}")
         groupCurrIndex = groupCurrIndex.updated(firstTripIndex, groupCurrIndex(firstTripIndex)+1)
-        println(s"groupCurrIndex now is ${groupCurrIndex}")
+//        println(s"groupCurrIndex now is ${groupCurrIndex}")
     }
     finalMergedTrip
   }
