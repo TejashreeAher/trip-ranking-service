@@ -11,7 +11,7 @@ class TripRankingServiceSpec extends PlaySpec with MockitoSugar{
     "give correct results " in {
       val model = mock[RankingModel]
       when(model.rankTrips(inputTrips))
-        .thenReturn(List(1,2,3))
+        .thenReturn(List(trip1,trip2,trip3))
 
       val service = new TripRankingService(model)
       val rankedTrips = service.rankTrips(inputTrips)

@@ -8,18 +8,26 @@ import models.Trip
 
 @Singleton
 class TripRankingService @Inject()(model : RankingModel) {
-  val BATCH_SIZE = 5 //This value is the maximum size that the model can take
+  val BATCH_SIZE = model.BATCH_SIZE //This value is the maximum size that the model can take
 
   def rankTrips(trips : Seq[Trip]) : Seq[Int] ={
-    val groupMap = getGroupsOfTrips(trips, BATCH_SIZE)
+    sortTrips(trips).map(_.tripId)
+  }
 
-    val rankedInGroups = groupMap.map{case (key, value) => {
-      (key, model.rankTrips(value))
-    }}
+//  This is essentially merge sort with the difference that the merge step has multiple batches and recursively calls sort
+  //method as the merged array can have more than 5 trips
+  def sortTrips(trips : Seq[Trip]): Seq[Trip] = {
+    val rankedTrips = if(trips.size <= BATCH_SIZE){
+      model.rankTrips(trips)
+    }else{
+      val groupMap = getGroupsOfTrips(trips, BATCH_SIZE)
+      val rankedInGroups = groupMap.map{case (key, value) => {
+        (key, model.rankTrips(value))
+      }}
 
-    //currently this just joins the result of all the individual groups
-    val rankedTrips = mergeRankedgroups(rankedInGroups)
-    rankedTrips.map(_.tripId)
+      mergeRankedgroups(rankedInGroups)
+    }
+    rankedTrips
   }
 
   def min(i: Int, j: Int) = {
@@ -27,10 +35,6 @@ class TripRankingService @Inject()(model : RankingModel) {
       case true => j
       case false => i
     }
-  }
-
-  def mergeRankedgroups2(rankedGrps : Map[Int, Seq[Int]]): Seq[Int] ={
-      rankedGrps.flatMap{case(key, value) => value}.toSeq
   }
 
   ///take care of duplicate trips in the input
@@ -48,27 +52,23 @@ class TripRankingService @Inject()(model : RankingModel) {
     //second condition is required if the group has the number multiple times, check if one of them matches
   }
 
-  //second implementation of merge
   def mergeRankedgroups(rankedGrps : Map[Int, Seq[Trip]]): Seq[Trip] ={
     var finalMergedTrip: Seq[Trip] = Seq.empty
     val numGroups = rankedGrps.size
-    var groupCurrIndex = List.fill(numGroups)(0)
-//    println(s"inititalise group current index to : ${groupCurrIndex}")
+    var groupCurrIndex = List.fill(numGroups)(0) //this keeps track of the pointer in the batches
     while(groupCurrIndex != rankedGrps.map(_._2.size).toList){
         val tempSeq = rankedGrps.map{case(index, value) => {
-          if(groupCurrIndex(index) < value.size) Some(value(groupCurrIndex(index)))
+          if(groupCurrIndex(index) < value.size) Some(value(groupCurrIndex(index))) //take the elements from each batch corresponding to their current pointer
           else None
           }
         }.toSeq.flatten
-//        println(s"Sequence to be merged : ${tempSeq}")
-        val mergedRankedTrips = model.rankTrips(tempSeq)
-//        println(s"Sequence to be merged is sorted to : ${mergedRankedTrips}")
+      //sort them
+        val mergedRankedTrips = sortTrips(tempSeq)
+
+      //this tells us which group the first trip belongs to after sorting and updates it's pointer accordingly
         val firstTripIndex = rankedGrps.filter(isIndexOfFirstTrip(_, mergedRankedTrips(0), groupCurrIndex)).head._1//this tells us which batch, the first element belongs to
-//        println(s"First trip belongs to group : ${firstTripIndex}")
         finalMergedTrip = finalMergedTrip :+ mergedRankedTrips(0)
-//        println(s"final sorted list has now : ${mergedRankedTrips(0)}")
         groupCurrIndex = groupCurrIndex.updated(firstTripIndex, groupCurrIndex(firstTripIndex)+1)
-//        println(s"groupCurrIndex now is ${groupCurrIndex}")
     }
     finalMergedTrip
   }

@@ -3,6 +3,7 @@ package controllers
 import javax.inject._
 
 import models.Trip
+import org.slf4j.LoggerFactory
 import play.api.mvc._
 import services.TripRankingService
 
@@ -12,6 +13,7 @@ import services.TripRankingService
   */
 @Singleton
 class TripRankingController @Inject()(service : TripRankingService) extends Controller {
+  val LOGGER = LoggerFactory.getLogger(this.getClass.getName)
 
   def index = Action {
     val rankedTrips = service.rankTrips(null)
@@ -23,9 +25,11 @@ class TripRankingController @Inject()(service : TripRankingService) extends Cont
       val inputData = request.body.asJson.get
       val inputTrips = inputData.as[Seq[Trip]]
       val rankedTrips = service.rankTrips(inputTrips)
+      LOGGER.info("Done ranking trips")
       Ok(rankedTrips.toString())
     } catch {
       case e: Exception=>
+        LOGGER.error("Failed to rank trips")
         InternalServerError(
           "failed"
       )
