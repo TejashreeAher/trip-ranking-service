@@ -33,7 +33,20 @@ class TripRankingService @Inject()(model : RankingModel) {
       rankedGrps.flatMap{case(key, value) => value}.toSeq
   }
 
-
+  ///take care of duplicate trips in the input
+  def isIndexOfFirstTrip(group: (Int, Seq[Trip]), firstTrip: Trip, groupCurrIndex: List[Int]):Boolean = {
+    group._2.contains(firstTrip) &&
+      group._2.zipWithIndex.collect
+      {case(element, index) => {
+        element.tripId match {
+          case(firstTrip.tripId) => Some(index)
+          case _ => None
+        }
+      }
+      }.flatten
+        .contains(groupCurrIndex(group._1))
+    //second condition is required if the group has the number multiple times, check if one of them matches
+  }
 
   //second implementation of merge
   def mergeRankedgroups(rankedGrps : Map[Int, Seq[Trip]]): Seq[Trip] ={
@@ -50,7 +63,7 @@ class TripRankingService @Inject()(model : RankingModel) {
         println(s"Sequence to be merged : ${tempSeq}")
         val mergedRankedTrips = model.rankTrips(tempSeq)
         println(s"Sequence to be merged is sorted to : ${mergedRankedTrips}")
-        val firstTripIndex = rankedGrps.filter(_._2.contains(mergedRankedTrips(0))).head._1//this tells us which batch, teh first element belongs to
+        val firstTripIndex = rankedGrps.filter(isIndexOfFirstTrip(_, mergedRankedTrips(0), groupCurrIndex)).head._1//this tells us which batch, the first element belongs to
         println(s"First trip belongs to group : ${firstTripIndex}")
         finalMergedTrip = finalMergedTrip :+ mergedRankedTrips(0)
         println(s"final sorted list has now : ${mergedRankedTrips(0)}")
